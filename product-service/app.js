@@ -40,6 +40,7 @@ amqp.connect('amqp://localhost', (err, connection) => {
         const product = await Product.findById(productId);
 
         if (product) {
+          
           product.inventory -= quantity;
           await product.save();
           console.log(`Inventory updated for product: ${productId}, New Inventory: ${product.inventory}`);
@@ -49,6 +50,8 @@ amqp.connect('amqp://localhost', (err, connection) => {
 
   });
 });
+
+
 
 //get all products route
 app.get('/products', async (req, res) => {
@@ -75,7 +78,13 @@ app.post('/products', async (req, res) => {
     const queue="product_events";
     console.log(`Event sent to queue: ${queue}`);
   
-    res.json({ message: 'Product created successfully' });
+    res.json({ 
+      productId: product._id,
+      name,
+      price,
+      inventory,
+      message: 'Product created successfully' 
+    });
     console.log("Product created successfully")
 });
   
