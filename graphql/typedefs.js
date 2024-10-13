@@ -20,6 +20,7 @@ const typeDefs = gql`
     userId: ID!
     quantity: Int!
     status: String!
+    
   }
 
   input RegisterInput {

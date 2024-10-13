@@ -48,7 +48,15 @@ app.post('/orders', async (req, res) => {
     const queue="order_events";
     console.log(`Event sent to queue: ${queue}`);
   
-    res.json({ message: 'Order placed successfully' });
+    res.json({ 
+      id : order._id,
+      userId,
+      productId,
+      quantity,
+      
+      
+      
+      message: 'Order placed successfully' });
     console.log("Order created successfully")
   });
 

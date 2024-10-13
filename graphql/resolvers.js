@@ -79,14 +79,14 @@ const resolvers = {
 
   Mutation: {
     registerUser: async (_, { input }) => {
-      userInputobj = {
-        name: input.name,
-        email: input.email,
-        password: input.password,
-      }
+      // userInputobj = {
+      //   name: input.name,
+      //   email: input.email,
+      //   password: input.password,
+      // }
       try {
         
-        const response = await axios.post("http://localhost:3001/users", userInputobj);
+        const response = await axios.post("http://localhost:3001/users", input);
         
         console.log("Raw API response:", response.data);
         const user = response.data;
@@ -100,8 +100,7 @@ const resolvers = {
           console.error("User registration not allowed");
           throw new Error("Failed to register user");
         }
-        console.log(user)
-        console.log(user.id)
+       
         // Return the necessary fields including id, name, and email
         return {
           id: user.id, // Use _id from the API response
@@ -143,7 +142,14 @@ const resolvers = {
     placeOrder: async (_, { input }) => {
       const response = await axios.post("http://localhost:3004/orders", input);
       const order = response.data;
-      return order;
+      console.log(order)
+      return {
+        __typename:"Order",
+        id: order.id,   
+        quantity: order.quantity,
+        userId: order.userId,
+        productId: order.productId
+      };
     },
   },
 };
