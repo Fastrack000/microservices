@@ -14,34 +14,47 @@ const resolvers = {
     user: async (_, { email }) => {
       try {
         // Fetch user data from external service
-        const response = await axios.get(`http://localhost:3001/api/users/${email}`);
-        
+        const response = await axios.get(
+          `http://localhost:3001/api/users/${email}`
+        );
+
         // If the request is successful, map the response to the expected structure
         if (response.status === 200 && response.data.length > 0) {
-          const user = response.data[0];  // Pick the first user from the array
-    
+          const user = response.data[0]; // Pick the first user from the array
+
           // Return the user object with id, name, and email
           return {
-            id: user._id,  // Use _id from the API response
+            id: user._id, // Use _id from the API response
             name: user.name,
             email: user.email,
           };
         }
-    
 
         // In case the user is not found or an error occurred, return an Error object
         return {
-          message: "User not found or error fetching user."
+          message: "User not found or error fetching user.",
         };
       } catch (error) {
         console.error("Error in user resolver:", error.message);
 
         // Return an Error object in case of failure
         return {
-          message: "Failed to fetch user information"
+          message: "Failed to fetch user information",
         };
       }
     },
+    products: async () => {
+      const response = await axios.get("http://localhost:3002/products");
+      const products = response.data;
+      console.log(products)
+      return products.map((product) => ({
+        id: product._id,
+        name: product.name,
+        price: product.price,
+        inventory: product.inventory,
+      }));
+    },
+
     product: async (_, { id }) => {
       const response = await axios.get(`http://localhost:3002/products/${id}`);
       return response.data;
@@ -57,6 +70,7 @@ const resolvers = {
         productId: order.productId,
       }));
     },
+
     order: async (_, { id }) => {
       const response = await axios.get(`http://localhost:3004/orders/${id}`);
       return response.data;
@@ -65,22 +79,32 @@ const resolvers = {
 
   Mutation: {
     registerUser: async (_, { input }) => {
+      userInputobj = {
+        name: input.name,
+        email: input.email,
+        password: input.password,
+      }
       try {
-        const response = await axios.post("http://localhost:3001/users", input);
-        const user = response.data[0];
+        
+        const response = await axios.post("http://localhost:3001/users", userInputobj);
+        
+        console.log("Raw API response:", response.data);
+        const user = response.data;
+
 
         // Log the user response for debugging
-        console.log(user);
+        console.log("User registration response:", user);
 
-        // Check the message from the API response
-        if (user.message !== "Ok Success") {
+        // Check if the registration was successful based on the expected message
+        if (!user || user.message !== "Ok Success") {
           console.error("User registration not allowed");
           throw new Error("Failed to register user");
         }
-
+        console.log(user)
+        console.log(user.id)
         // Return the necessary fields including id, name, and email
         return {
-          id: user.id, // Include the id field here
+          id: user.id, // Use _id from the API response
           name: user.name,
           email: user.email,
         };
@@ -103,17 +127,16 @@ const resolvers = {
         input
       );
       const productApi = response.data;
-      console.log(productApi)
+      console.log(productApi);
       if (productApi.message !== "Product created successfully") {
         throw new Error("Product not created successfully");
       }
       const product = {
-        __typename: 'Product',
+        __typename: "Product",
         id: productApi.productId,
         name: productApi.name,
-        status: "Pending",
         price: productApi.price,
-        quantity: productApi.quantity,
+        inventory: productApi.inventory,
       };
       return product;
     },
