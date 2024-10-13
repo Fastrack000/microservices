@@ -39,18 +39,18 @@ const typeDefs = gql`
     userId: ID!
     quantity: Int!
   }
-
+  type Error {
+    message: String!
+  }
   type Query {
     users: [User!]!
-    user(id: ID!): User
+    user(email: String!): User | Error
     products: [Product!]!
     product(id: ID!): Product
     orders: [Order!]!
     order(id: ID!): Order
   }
-  type Error {
-    message: String!
-  }
+  
   
 
   union ProductResponse = Product | Error

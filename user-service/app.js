@@ -61,6 +61,16 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve users' });
   }
 });
+app.get('/api/users/:UserId', async (req, res) => {
+  try {
+    const users = await User.find({email:req.params.UserId});
+    res.status(200).json(users);
+    console.log("Users fetched successfully");
+  } catch (error) {
+    console.error('Error fetching users:', error.message);
+    res.status(500).json({ error: 'Failed to retrieve users' });
+  }
+});
 
 // Register user route
 app.post('/users', async (req, res) => {

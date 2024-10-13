@@ -11,25 +11,36 @@ const resolvers = {
         email: user.email,
       }));
     },
-    user: async (_, { id }) => {
-      const response = await axios.get(`http://localhost:3001/api/users/${id}`);
-      const user = response.data;
-      return {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      };
-    },
-    products: async () => {
-      const response = await axios.get("http://localhost:3002/products");
-      const products = response.data;
+    user: async (_, { email }) => {
+      try {
+        // Fetch user data from external service
+        const response = await axios.get(`http://localhost:3001/api/users/${email}`);
+        
+        // If the request is successful, map the response to the expected structure
+        if (response.status === 200 && response.data.length > 0) {
+          const user = response.data[0];  // Pick the first user from the array
+    
+          // Return the user object with id, name, and email
+          return {
+            id: user._id,  // Use _id from the API response
+            name: user.name,
+            email: user.email,
+          };
+        }
+    
 
-      return products.map((product) => ({
-        id: product._id,
-        name: product.name,
-        price: product.price,
-        inventory: product.inventory,
-      }));
+        // In case the user is not found or an error occurred, return an Error object
+        return {
+          message: "User not found or error fetching user."
+        };
+      } catch (error) {
+        console.error("Error in user resolver:", error.message);
+
+        // Return an Error object in case of failure
+        return {
+          message: "Failed to fetch user information"
+        };
+      }
     },
     product: async (_, { id }) => {
       const response = await axios.get(`http://localhost:3002/products/${id}`);
@@ -56,7 +67,7 @@ const resolvers = {
     registerUser: async (_, { input }) => {
       try {
         const response = await axios.post("http://localhost:3001/users", input);
-        const user = response.data;
+        const user = response.data[0];
 
         // Log the user response for debugging
         console.log(user);
@@ -69,7 +80,6 @@ const resolvers = {
 
         // Return the necessary fields including id, name, and email
         return {
-          __typename: "User",
           id: user.id, // Include the id field here
           name: user.name,
           email: user.email,
