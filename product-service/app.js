@@ -5,7 +5,7 @@ const express = require('express');
 const productRoutes = require('./routes/productRoutes');
 const { connectRabbitMQ } = require('./rabbitmq');
 const Product = require('./models/Product');
-
+const authMiddleware = require('./middleware/authMiddleware');
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected for Product Service'))
@@ -39,11 +39,14 @@ amqp.connect('amqp://localhost', (err, connection) => {
         const quantity = event.data.quantity;
         const product = await Product.findById(productId);
 
-        if (product) {
+        if (product && quantity<=product.quantity) {
           
           product.inventory -= quantity;
           await product.save();
           console.log(`Inventory updated for product: ${productId}, New Inventory: ${product.inventory}`);
+        }
+        else{
+          console.log(`Insufficient stock for product: ${productId}`);
         }
       }
     }, { noAck: true });
@@ -66,8 +69,28 @@ app.get('/products', async (req, res) => {
 });
   
 
+// Get a specific product by ID
+app.get("/products/:id", async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    console.log(product)
+    res.status(200).json(product);
+    
+    console.log(`Product fetched successfully: ${product.productId}`);
+  } catch (error) {
+    console.error('Error fetching product:', error.message);
+    res.status(500).json({ error: 'Failed to retrieve product' });
+  }
+});
+
+
 // Create a product
-app.post('/products', async (req, res) => {
+app.post('/products',authMiddleware, async (req, res) => {
     const { name, price, inventory } = req.body;
     const product = new Product({ name, price, inventory });
     await product.save();
@@ -89,7 +112,7 @@ app.post('/products', async (req, res) => {
 });
   
 // Update inventory
-app.put('/products/:id/inventory', async (req, res) => {
+app.put('/products/:id/inventory',authMiddleware, async (req, res) => {
     const { inventory } = req.body;
     const product = await Product.findByIdAndUpdate(req.params.id, { inventory });
   

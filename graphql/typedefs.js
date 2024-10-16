@@ -31,7 +31,7 @@ const typeDefs = gql`
 
   input ProductInput {
     name: String!
-    price: Float!
+    price: Int!
     inventory: Int!
   }
 
@@ -43,7 +43,7 @@ const typeDefs = gql`
 
   type Query {
     users: [User!]!
-    user(email: String!): User 
+    user(id: ID!): User 
     products: [Product!]!
     product(id: ID!): Product
     orders: [Order!]!
